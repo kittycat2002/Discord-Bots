@@ -1,0 +1,5 @@
+*.exe
+*.json
+*.token
+deps
+LICENSE
