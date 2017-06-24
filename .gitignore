@@ -1,4 +1,6 @@
+*.dll
 *.exe
 *.json
 *.token
 deps
+music
