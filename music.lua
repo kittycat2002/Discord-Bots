@@ -1,11 +1,14 @@
 local discordia = require('discordia')
 local fs = require('fs')
+local json = require('json')
 local timer = require('timer')
 local client = discordia.Client()
 musiclist = fs.readdirSync('music')
+print(json.parse(fs.readFileSync("music.config")))
+local config = json.parse(fs.readFileSync("music.config"))
 client:on('ready', function()
   print("bot connected to discord with id "..client.user.id)
-  channel = client:getGuild('216411946017095693'):getVoiceChannel('327510823603798016')
+  channel = client:getGuild(config.guild):getVoiceChannel(config.channel)
   connection = channel:join()
   while true do
     music = musiclist[math.random(1,#musiclist)]
