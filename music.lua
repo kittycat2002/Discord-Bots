@@ -7,7 +7,6 @@ local config = json.parse(fs.readFileSync("music.config"))
 musiclist = {}
 local function musiclistfunction(dir)
   for i=1,#fs.readdirSync(dir) do
-	print(fs.statSync(dir.."/"..fs.readdirSync(dir)[i]).type)
 	if fs.statSync(dir.."/"..fs.readdirSync(dir)[i]).type == 'directory' then
 	  musiclistfunction(dir.."/"..fs.readdirSync(dir)[i])
 	else
@@ -47,5 +46,5 @@ musiclistfunction(config.musicdir)
 local token = fs.readFileSync('music.token')
 client.voice:loadOpus('libopus-x64')
 client.voice:loadSodium('libsodium-x64')
-client:run('MzE3MTcwNjkzOTQ1MTYzNzg1.DDFypQ.V7K6IMRHivA7TgEyRQNP-Zs69l4')
+client:run(token)
 end
