@@ -12,7 +12,10 @@ client:on('ready', function()
   while true do
     music = musiclist[math.random(1,#musiclist)]
 	if channel.memberCount > 1 then
-	  client:setGameName(string.sub(music,1,-5))
+	  musicname = string.sub(music,string.find(music,'^.*%.'))
+	  musicname = string.sub(musicname,1,-2)
+	  musicname = string.gsub(musicname,"[%-_]"," ")
+	  client:setGameName(musicname)
       connection:playFile("music/"..music)
 	  client:setGameName()
 	end
