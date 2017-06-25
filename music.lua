@@ -20,11 +20,7 @@ client:on('ready', function()
   channel = client:getGuild(config.guild):getVoiceChannel(config.channel)
   connection = channel:join()
   while true do
-    if os.date('%m') == '04' and os.date('%d') == '01' then
-      music = 'Never Gonna Give You Up.mp3'
-	else  
 	  music = musiclist[math.random(1,#musiclist)]
-	end
 	if channel.memberCount > 1 then
 	  musicname = string.sub(music.name,string.find(music.name,'^.*%.'))
 	  musicname = string.sub(musicname,1,-2)
