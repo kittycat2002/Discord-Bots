@@ -13,6 +13,10 @@ for i in pairs(config.pools) do
 	end
 end
 
+for i=1,#config.triggers.random do
+	config.triggers.random[i].nexttime = os.time() + math.random(config.triggers.random[i].time[1],config.triggers.random[i].time[2])
+end
+
 local function randomtext(tab)
 	rand = math.random(1,tab.num)
 	for i=1,#tab-1 do
@@ -44,10 +48,55 @@ client:on('ready', function()
 end)
 
 client:on('heartbeat', function()
+	for i=1,#config.triggers.random do
+		if config.triggers.random[i].nexttime <= os.time() then
+			local channel = client:getGuild(config.triggers.random[i].guild):getChannel('name',config.triggers.random[i].channelname)
+			local pool = config.pools[config.triggers.random[i].pools]
+			sendMessage(randomtext(pool),channel)
+			config.triggers.random[i].nexttime = os.time() + math.random(config.triggers.random[i].time[1],config.triggers.random[i].time[2])
+		end
+	end
 end)
 
 client:on('messageCreate', function(message)
 	if not message.author.bot then
+		mentions = nil
+		if message.mentionedUsers() then
+		for i=1,#config.triggers.mentions do
+			mention = false
+			for j=1,#config.triggers.mentions[i].mentioned do
+				if string.lower(config.triggers.mentions[i].mentioned[j]) == "self" and message:mentionsObject(client.user) then
+					mention = true
+					break
+				elseif string.lower(config.triggers.mentions[i].mentioned[j]) ~= "self" then
+					local function getuser(member)
+						local user = config.triggers.mentions[i].mentioned[j]
+						return member.username == string.sub(user,1,-6) and member.discriminator == string.sub(user,-4)
+					end
+					getuser(message.member)
+					if message.guild:findMember(getuser) and message:mentionsObject(message.guild:findMember(getuser)) then
+						mention = true
+						break
+					end
+				end
+			end
+			local channel = nil
+			if mention then
+				for k=1,#config.triggers.mentions[i].channelnames do
+					if message.channel.name == config.triggers.mentions[i].channelnames[k] then
+						channel = true
+						break
+					end
+				end
+			end
+			if channel then
+				mentions = true
+				local pool = config.pools[config.triggers.mentions[i].pools]
+				sendMessage(randomtext(pool),message.channel)
+			end
+		end
+		end
+		if not mentions then
 		for i=1,#config.triggers.newMessage do
 			trigger = true
 			if config.triggers.newMessage[i].guilds then
@@ -94,6 +143,7 @@ client:on('messageCreate', function(message)
 				break
 			end
 		end
+	end
 	end
 end)
 
