@@ -17,6 +17,10 @@ for i=1,#config.triggers.random do
 	config.triggers.random[i].nexttime = os.time() + math.random(config.triggers.random[i].time[1],config.triggers.random[i].time[2])
 end
 
+for i=1,#config.triggers.mentions do
+	config.triggers.mentions[i].nexttime = os.time()
+end
+
 local function randomtext(tab)
 	rand = math.random(1,tab.num)
 	for i=1,#tab-1 do
@@ -63,6 +67,7 @@ client:on('messageCreate', function(message)
 		mentions = nil
 		if message.mentionedUsers() then
 		for i=1,#config.triggers.mentions do
+			if config.triggers.mentions[i].nexttime < os.time() then
 			mention = false
 			for j=1,#config.triggers.mentions[i].mentioned do
 				if string.lower(config.triggers.mentions[i].mentioned[j]) == "self" and message:mentionsObject(client.user) then
@@ -85,6 +90,7 @@ client:on('messageCreate', function(message)
 				for k=1,#config.triggers.mentions[i].channelnames do
 					if message.channel.name == config.triggers.mentions[i].channelnames[k] then
 						channel = true
+						config.triggers.mentions[i].nexttime = os.time() + config.triggers.mentions[i].cooldown
 						break
 					end
 				end
@@ -93,6 +99,7 @@ client:on('messageCreate', function(message)
 				mentions = true
 				local pool = config.pools[config.triggers.mentions[i].pools]
 				sendMessage(randomtext(pool),message.channel)
+			end
 			end
 		end
 		end
