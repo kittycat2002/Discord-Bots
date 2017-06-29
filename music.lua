@@ -22,7 +22,13 @@ client:on('ready', function()
   while true do
     if channel.memberCount > 1 then
       musiclistfunction(config.musicdir)
-	  music = musiclist[math.random(1,#musiclist)]
+	  if fs.readFileSync("nextsong.txt") ~= '{"name":"","dir":""}' then
+	    music = json.parse(fs.readFileSync('nextsong.txt'))
+		fs.writeFileSync('nextsong.txt','{"name":"","dir":""}')
+		music.dir = config.musicdir.."/"..music.dir
+	  else
+		music = musiclist[math.random(1,#musiclist)]
+	  end
 	  musicname = string.sub(music.name,string.find(music.name,'^.*%.'))
 	  musicname = string.sub(musicname,1,-2)
 	  musicname = string.gsub(musicname,"[%-_]"," ")
