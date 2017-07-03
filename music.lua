@@ -39,34 +39,38 @@ client:on('ready', function()
 end)
 
 client:on('messageCreate', function(message)
-  if message.member.roleCount > 0 then
-    if string.lower(string.sub(message.content,1,7)) == "!queue " then
-      musiclistfunction(config.musicdir)
-      for i=1,#musiclist do
-	    musicq = musiclist[i]
-	    if string.lower(string.gsub(string.sub(string.sub(musicq.name,string.find(musicq.name,'^.*%.')),1,-2),"[%-_]"," ")) == string.lower(string.gsub(string.sub(message.content,8),"[%-_]"," ")) then
-	      table.insert(queue,musicq)
-		  break
+  if not message.author.bot and message.channel.id == config.queuechannel then
+    if message.member.roleCount > 0 then
+      if string.lower(string.sub(message.content,1,7)) == "!queue " then
+        musiclistfunction(config.musicdir)
+        for i=1,#musiclist do
+	      musicq = musiclist[i]
+	      if string.lower(string.gsub(string.sub(string.sub(musicq.name,string.find(musicq.name,'^.*%.')),1,-2),"[%-_]"," ")) == string.lower(string.gsub(string.sub(message.content,8),"[%-_]"," ")) then
+	        table.insert(queue,musicq)
+			message.channel:sendMessage("Added \""..string.gsub(string.sub(string.sub(musicq.name,string.find(musicq.name,'^.*%.')),1,-2),"[%-_]"," ").."\" to the queue, there "..(#queue == 1 and "is" or "are").." now "..#queue.." "..(#queue == 1 and "song" or "songs").." in the queue.")
+		    break
+	      end
+        end
+      elseif string.lower(string.sub(message.content,1,11)) == "!clearqueue" then
+	    queue = {}
+	  elseif string.lower(string.sub(message.content,1,13)) == "!queueremove " then
+	    if queue[tonumber(string.sub(message.content,14))] then
+		  message.channel:sendMessage("Removed \""..string.gsub(string.sub(string.sub(queue[tonumber(string.sub(message.content,14))].name,string.find(queue[tonumber(string.sub(message.content,14))].name,'^.*%.')),1,-2),"[%-_]"," ").."\" from the queue, there "..(#queue == 2 and "is" or "are").." now "..(#queue-1).." "..(#queue == 2 and "song" or "songs").." in the queue.")
+	      table.remove(queue,tonumber(string.sub(message.content,14)))
 	    end
-      end
-    elseif string.lower(string.sub(message.content,1,11)) == "!clearqueue" then
-	  queue = {}
-	elseif string.lower(string.sub(message.content,1,13)) == "!queueremove " then
-	  if tonumber(string.sub(message.content,14)) then
-	    table.remove(queue,tonumber(string.sub(message.content,14)))
 	  end
-	end
-  end
-  if string.lower(string.sub(message.content,1,10)) == "!queuelist" then
-    if #queue == 0 then
-	  message.channel:sendMessage("The queue is currently empty.")
-	else
-	  local queuelist = ""
-      for i=1,#queue do
-	    queuelist = queuelist..i..": "..string.gsub(string.sub(string.sub(queue[i].name,string.find(queue[i].name,'^.*%.')),1,-2),"[%-_]"," ").."\n"
+    end
+    if string.lower(string.sub(message.content,1,10)) == "!queuelist" then
+      if #queue == 0 then
+	    message.channel:sendMessage("The queue is currently empty.")
+	  else
+	    local queuelist = ""
+        for i=1,#queue do
+	      queuelist = queuelist..i..": "..string.gsub(string.sub(string.sub(queue[i].name,string.find(queue[i].name,'^.*%.')),1,-2),"[%-_]"," ").."\n"
+	    end
+	    message.channel:sendMessage(queuelist)
 	  end
-	  message.channel:sendMessage(queuelist)
-	end
+    end
   end
 end)
 
