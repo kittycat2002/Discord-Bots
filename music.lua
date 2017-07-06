@@ -1,11 +1,13 @@
 local discordia = require('discordia')
 local fs = require('fs')
+local http = require('http')
 local json = require('json')
 local timer = require('timer')
 local client = discordia.Client()
 local config,_,err = json.parse(fs.readFileSync("music.config"))
 musiclist = {}
 queue = {}
+
 local function musiclistfunction(dir)
   for i=1,#fs.readdirSync(dir) do
 	if fs.statSync(dir.."/"..fs.readdirSync(dir)[i]).type == 'directory' then
@@ -16,61 +18,99 @@ local function musiclistfunction(dir)
   end
 end
 
+local function tabtostr(tab,s,e)
+  local str = ''
+  for i = (s or 1),(e or #tab) do
+	str = str..tab[i]..' '
+  end
+  return string.sub(str,1,-2)
+end
 client:on('ready', function()
   print("bot connected to discord with id "..client.user.id)
   channel = client:getGuild(config.guild):getVoiceChannel(config.channel)
+  queuechannel = client:getGuild(config.guild):getTextChannel(config.queuechannel)
   connection = channel:join()
   while true do
-    if channel.memberCount > 1 then
-      musiclistfunction(config.musicdir)
+	if channel.memberCount > 1 then
+	  musiclistfunction(config.musicdir)
 	  if #queue > 0 then
-	    music = queue[1]
+		music = queue[1]
 		table.remove(queue,1)
 	  else
 		music = musiclist[math.random(1,#musiclist)]
 	  end
 	  musicname = string.gsub(string.sub(string.sub(music.name,string.find(music.name,'^.*%.')),1,-2),"[%-_]"," ")
+	  queuechannel:sendMessage('Now playing '..musicname)
 	  client:setGameName(musicname)
-      connection:playFile(music.dir.."/"..music.name)
+	  connection:playFile(music.dir.."/"..music.name)
 	  client:setGameName()
 	end
-    timer.sleep(1000)
+	timer.sleep(1000)
   end
 end)
 
 client:on('messageCreate', function(message)
   if not message.author.bot and message.channel.id == config.queuechannel then
-    if message.member.roleCount > 0 then
-      if string.lower(string.sub(message.content,1,7)) == "!queue " then
-        musiclistfunction(config.musicdir)
-        for i=1,#musiclist do
-	      musicq = musiclist[i]
-	      if string.lower(string.gsub(string.sub(string.sub(musicq.name,string.find(musicq.name,'^.*%.')),1,-2),"[%-_]"," ")) == string.lower(string.gsub(string.sub(message.content,8),"[%-_]"," ")) then
-	        table.insert(queue,musicq)
+	local arg = message.content
+	local args = {}
+	local i = 0
+	if arg then
+	  while #arg > 0 do
+		i = i + 1
+		if string.match(arg,'^%s+') then
+	  	  _,j = string.find(arg,'^%s+')
+		elseif string.match(arg,'^[\'"]') then
+		  if string.match(arg, "^%b''") then
+			args[i] = string.sub(string.match(arg, "^%b''"),2,-2)
+			_,j = string.find(arg,"^%b''")
+		  elseif string.match(arg, '^%b""') then
+			args[i] = string.sub(string.match(arg, '^%b""'),2,-2)
+			_,j = string.find(arg,'^%b""')
+		  end
+		elseif string.match(arg, "[^%s\"']+") then
+		  args[i] = string.match(arg, "[^%s\"']+")
+		  _,j = string.find(arg,"[^%s\"']+")
+		end
+		arg = string.sub(arg,j+1)
+		if not args[i] then
+		  i = i - 1
+		end
+	  end
+	end
+	if message.member.roleCount > 0 then
+	  if args[1] == "!queue" and args[2] == "add" then
+		musiclistfunction(config.musicdir)
+		for i=1,#musiclist do
+		  musicq = musiclist[i]
+		  if string.lower(string.gsub(string.sub(string.sub(musicq.name,string.find(musicq.name,'^.*%.')),1,-2),"[%-_]"," ")) == string.lower(string.gsub(tabtostr(args,3),"[%-_]"," ")) then
+			table.insert(queue,musicq)
 			message.channel:sendMessage("Added \""..string.gsub(string.sub(string.sub(musicq.name,string.find(musicq.name,'^.*%.')),1,-2),"[%-_]"," ").."\" to the queue, there "..(#queue == 1 and "is" or "are").." now "..#queue.." "..(#queue == 1 and "song" or "songs").." in the queue.")
-		    break
-	      end
-        end
-      elseif string.lower(string.sub(message.content,1,11)) == "!clearqueue" then
-	    queue = {}
-	  elseif string.lower(string.sub(message.content,1,13)) == "!queueremove " then
-	    if queue[tonumber(string.sub(message.content,14))] then
-		  message.channel:sendMessage("Removed \""..string.gsub(string.sub(string.sub(queue[tonumber(string.sub(message.content,14))].name,string.find(queue[tonumber(string.sub(message.content,14))].name,'^.*%.')),1,-2),"[%-_]"," ").."\" from the queue, there "..(#queue == 2 and "is" or "are").." now "..(#queue-1).." "..(#queue == 2 and "song" or "songs").." in the queue.")
-	      table.remove(queue,tonumber(string.sub(message.content,14)))
-	    end
+			break
+		  end
+		end
+	  elseif args[1] == "!queue" and args[2] == "clear" then
+		queue = {}
+		message.channel:sendMessage('Cleared the queue.')
+	  elseif args[1] == "!queue" and args[2] == "remove" then
+		if queue[tonumber(args[3])] then
+		  message.channel:sendMessage("Removed \""..string.gsub(string.sub(string.sub(queue[tonumber(args[3])].name,string.find(queue[tonumber(args[3])].name,'^.*%.')),1,-2),"[%-_]"," ").."\" from the queue, there "..(#queue == 2 and "is" or "are").." now "..(#queue-1).." "..(#queue == 2 and "song" or "songs").." in the queue.")
+		  table.remove(queue,tonumber(args[3]))
+		end
+	  elseif args[1] == "!nextsong" then
+		client.voice:stopStreams()
 	  end
-    end
-    if string.lower(string.sub(message.content,1,10)) == "!queuelist" then
-      if #queue == 0 then
-	    message.channel:sendMessage("The queue is currently empty.")
+	end
+	if args[1] == "!queue" and args[2] == "list" then
+	  if #queue == 0 then
+		message.channel:sendMessage("The queue is currently empty.")
 	  else
-	    local queuelist = ""
-        for i=1,#queue do
-	      queuelist = queuelist..i..": "..string.gsub(string.sub(string.sub(queue[i].name,string.find(queue[i].name,'^.*%.')),1,-2),"[%-_]"," ").."\n"
-	    end
-	    message.channel:sendMessage(queuelist)
+		local queuelist = ""
+		for i=1,#queue do
+		  queuelist = queuelist..i..": "..string.gsub(string.sub(string.sub(queue[i].name,string.find(queue[i].name,'^.*%.')),1,-2),"[%-_]"," ").."\n"
+		end
+		message.channel:sendMessage(queuelist)
 	  end
-    end
+	end
   end
 end)
 
