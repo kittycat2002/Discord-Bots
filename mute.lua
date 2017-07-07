@@ -3,6 +3,14 @@ local fs = require('fs')
 local json = require('json')
 local client = discordia.Client()
 
+local function tabtostr(tab,s,e)
+  local str = ''
+  for i = (s or 1),(e or #tab) do
+	str = str..tab[i]..' '
+  end
+  return string.sub(str,1,-2)
+end
+
 function mute(user,guild)
   if type(guild) == 'string' then
     guild = client:getGuild(guild)
@@ -58,8 +66,34 @@ unmutetimed()
 end)
 
 client:on('messageCreate', function(message)
+  unmutetimed()
   if not message.author.bot then
-    unmutetimed()
+    local arg = message.content
+	local args = {}
+	local i = 0
+	if arg then
+	  while #arg > 0 do
+		i = i + 1
+		if string.match(arg,'^%s+') then
+	  	  _,j = string.find(arg,'^%s+')
+		elseif string.match(arg,'^[\'"]') then
+		  if string.match(arg, "^%b''") then
+			args[i] = string.sub(string.match(arg, "^%b''"),2,-2)
+			_,j = string.find(arg,"^%b''")
+		  elseif string.match(arg, '^%b""') then
+			args[i] = string.sub(string.match(arg, '^%b""'),2,-2)
+			_,j = string.find(arg,'^%b""')
+		  end
+		elseif string.match(arg, "[^%s\"']+") then
+		  args[i] = string.match(arg, "[^%s\"']+")
+		  _,j = string.find(arg,"[^%s\"']+")
+		end
+		arg = string.sub(arg,j+1)
+		if not args[i] then
+		  i = i - 1
+		end
+	  end
+	end
 	canmute = nil
 	for role in message.guild:getMember(message.author.id).roles do
 	  if role.permissions:has('manageMessages') then
@@ -67,10 +101,9 @@ client:on('messageCreate', function(message)
 		break
 	  end
 	end
-	if string.sub(message.content,1,7) == "!unmute" and canmute then
+	if args[1] == "!unmute" and canmute then
 	  local mutelist = json.parse(fs.readFileSync("mute.config")) or {}
-	  local str = message.content
-      local str = string.sub(str,9)
+      local str = tabtostr(args,2)
 	  local str = string.gsub(str,"^%s*","")
 	  local sub1,sub2 = string.find(str,".*#%d%d%d%d")
 	  if sub1 then
@@ -80,28 +113,48 @@ client:on('messageCreate', function(message)
 			table.remove(mutelist,i)
 			fs.writeFileSync("mute.config",json.stringify(mutelist))
 			unmute(user,message.guild)
+			local function getuser(member)
+			  return member.username == string.sub(user,1,-6) and member.discriminator == string.sub(user,-4)
+			end
+			message.channel:sendMessage('Unmuted '..message.guild:findMember(getuser).name..'.')
 			break
 		  end
 		end
 	  end
-	elseif string.sub(message.content,1,5) == "!mute" and canmute then
+	elseif args[1] == "!mute" and canmute then
 	  local mutelist = json.parse(fs.readFileSync("mute.config")) or {}
-	  local str = message.content
-      local str = string.sub(str,7)
+	  local str = tabtostr(args,2)
 	  local str = string.gsub(str,"^%s*","")
       local sub1,sub2 = string.find(str,".*#%d%d%d%d")
       if sub1 then
         local user = string.sub(str,sub1,sub2)
         local str = string.sub(str,sub2+1)
-        duration = tonumber(string.reverse(string.sub(string.reverse(str),string.find(string.reverse(str),"%d*"))))
-		if duration then
+        local d = tonumber(string.sub(string.match(str,'%d+d') or '',1,-2))
+		local h = tonumber(string.sub(string.match(str,'%d+h') or '',1,-2))
+		local m = tonumber(string.sub(string.match(str,'%d+m') or '',1,-2))
+		local s = tonumber(string.sub(string.match(str,'%d+s') or '',1,-2))
+		local time = (s or 0) + (m or 0) * 60 + (h or 0) * 3600 + (d or 0) * 86400
+		local d = math.floor(time/86400)
+		local distime = time - d * 86400
+		local h = math.floor(distime/3600)
+		local distime = distime - h * 3600
+		local m = math.floor(distime/60)
+		local distime = distime - m * 60
+		local s = distime
+		if time > 0 then
 		  for i = 1,#mutelist+1 do
 			if i == #mutelist+1 then
-			  mutelist[i] = {user=string.sub(user,1,-6),discriminator=string.sub(user,-4),guild=message.guild.id,duration=os.time()+duration*60}
+			  local function getuser(member)
+				return member.username == string.sub(user,1,-6) and member.discriminator == string.sub(user,-4)
+			  end
+			  mutelist[i] = {user=string.sub(user,1,-6),discriminator=string.sub(user,-4),guild=message.guild.id,duration=os.time()+time}
 			  fs.writeFileSync("mute.config",json.stringify(mutelist))
 			  mute(user,message.guild)
+			  message.channel:sendMessage('Muted '..message.guild:findMember(getuser).name..' for '..(d > 0 and d..'d ' or '')..(h > 0 and h..'h ' or '')..(m > 0 and m..'m ' or '')..(s > 0 and s..'s' or '')..'.')
 			  break
 			elseif mutelist[i].user == string.sub(user,1,-6) and mutelist[i].discriminator == string.sub(user,-4) and mutelist[i].guild == message.guild.id then
+			  mutelist[i].duration = os.time()+time
+			  message.channel:sendMessage('Muted '..message.guild:findMember(getuser).name..' for '..(d > 0 and d..'d ' or '')..(h > 0 and h..'h ' or '')..(m > 0 and m..'m ' or '')..(s > 0 and s..'s' or '')..'.')
 			  break
 			end
 		  end

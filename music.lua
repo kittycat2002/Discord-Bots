@@ -78,17 +78,7 @@ client:on('messageCreate', function(message)
 	  end
 	end
 	if message.member.roleCount > 0 then
-	  if args[1] == "!queue" and args[2] == "add" then
-		musiclistfunction(config.musicdir)
-		for i=1,#musiclist do
-		  musicq = musiclist[i]
-		  if string.lower(string.gsub(string.sub(string.sub(musicq.name,string.find(musicq.name,'^.*%.')),1,-2),"[%-_]"," ")) == string.lower(string.gsub(tabtostr(args,3),"[%-_]"," ")) then
-			table.insert(queue,musicq)
-			message.channel:sendMessage("Added \""..string.gsub(string.sub(string.sub(musicq.name,string.find(musicq.name,'^.*%.')),1,-2),"[%-_]"," ").."\" to the queue, there "..(#queue == 1 and "is" or "are").." now "..#queue.." "..(#queue == 1 and "song" or "songs").." in the queue.")
-			break
-		  end
-		end
-	  elseif args[1] == "!queue" and args[2] == "clear" then
+	  if args[1] == "!queue" and args[2] == "clear" then
 		queue = {}
 		message.channel:sendMessage('Cleared the queue.')
 	  elseif args[1] == "!queue" and args[2] == "remove" then
@@ -109,6 +99,16 @@ client:on('messageCreate', function(message)
 		  queuelist = queuelist..i..": "..string.gsub(string.sub(string.sub(queue[i].name,string.find(queue[i].name,'^.*%.')),1,-2),"[%-_]"," ").."\n"
 		end
 		message.channel:sendMessage(queuelist)
+	  end
+	elseif args[1] == "!queue" and args[2] == "add" then
+	  musiclistfunction(config.musicdir)
+	  for i=1,#musiclist do
+		musicq = musiclist[i]
+		if string.lower(string.gsub(string.sub(string.sub(musicq.name,string.find(musicq.name,'^.*%.')),1,-2),"[%-_]"," ")) == string.lower(string.gsub(tabtostr(args,3),"[%-_]"," ")) then
+		  table.insert(queue,musicq)
+		  message.channel:sendMessage("Added \""..string.gsub(string.sub(string.sub(musicq.name,string.find(musicq.name,'^.*%.')),1,-2),"[%-_]"," ").."\" to the queue, there "..(#queue == 1 and "is" or "are").." now "..#queue.." "..(#queue == 1 and "song" or "songs").." in the queue.")
+		  break
+		end
 	  end
 	end
   end
