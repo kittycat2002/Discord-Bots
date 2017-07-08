@@ -25,6 +25,7 @@ function mute(user,guild)
   local muted = guild:findRole(getrole)
   if muted then
     member:addRole(muted)
+	member:setMute(true)
   end
 end
 function unmute(user,guild)
@@ -41,6 +42,7 @@ function unmute(user,guild)
   local muted = guild:findRole(getrole)
   if muted then
     member:removeRole(muted)
+	member:setMute(false)
   end
 end
 function unmutetimed()
