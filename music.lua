@@ -30,6 +30,7 @@ client:on('ready', function()
   channel = client:getGuild(config.guild):getVoiceChannel(config.channel)
   queuechannel = client:getGuild(config.guild):getTextChannel(config.queuechannel)
   connection = channel:join()
+  client:setGameName()
   while true do
 	if channel.memberCount > 1 then
 	  musiclistfunction(config.musicdir)
@@ -123,7 +124,7 @@ elseif #fs.readdirSync(config.musicdir) == 0 then
 else
 musiclistfunction(config.musicdir)
 local token = fs.readFileSync('music.token')
-client.voice:loadOpus('libopus-x64')
-client.voice:loadSodium('libsodium-x64')
+client.voice:loadOpus(config.libopus)
+client.voice:loadSodium(config.libsodium)
 client:run(token)
 end
