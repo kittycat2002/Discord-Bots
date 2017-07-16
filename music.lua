@@ -89,6 +89,7 @@ client:on('messageCreate', function(message)
 		end
 	  elseif args[1] == "!nextsong" then
 		client.voice:stopStreams()
+		client:setGameName()
 	  end
 	end
 	if args[1] == "!queue" and args[2] == "list" then
@@ -102,7 +103,6 @@ client:on('messageCreate', function(message)
 		message.channel:sendMessage(queuelist)
 	  end
 	elseif args[1] == "!queue" and args[2] == "add" then
-	  musiclistfunction(config.musicdir)
 	  for i=1,#musiclist do
 		musicq = musiclist[i]
 		if string.lower(string.gsub(string.sub(string.sub(musicq.name,string.find(musicq.name,'^.*%.')),1,-2),"[%-_]"," ")) == string.lower(string.gsub(tabtostr(args,3),"[%-_]"," ")) then

@@ -52,6 +52,10 @@ function unmutetimed()
     i = i-mod
     if mutelist[i].duration < os.time() then
 	  unmute(mutelist[i].user..'#'..mutelist[i].discriminator,mutelist[i].guild)
+	  local function getuser(member)
+        return member.username == mutelist[i].user and member.discriminator == mutelist[i].discriminator
+      end
+	  client:getGuild(mutelist[i].guild):getChannel(mutelist[i].channel):sendMessage('Unmuted '..client:getGuild(mutelist[i].guild):findMember(getuser).name..'.')
       table.remove(mutelist,i)
 	  mod = mod+1
 	end
@@ -68,8 +72,8 @@ unmutetimed()
 end)
 
 client:on('messageCreate', function(message)
-  unmutetimed()
   if not message.author.bot then
+    unmutetimed()
     local arg = message.content
 	local args = {}
 	local i = 0
@@ -149,7 +153,7 @@ client:on('messageCreate', function(message)
 			  local function getuser(member)
 				return member.username == string.sub(user,1,-6) and member.discriminator == string.sub(user,-4)
 			  end
-			  mutelist[i] = {user=string.sub(user,1,-6),discriminator=string.sub(user,-4),guild=message.guild.id,duration=os.time()+time}
+			  mutelist[i] = {user=string.sub(user,1,-6),discriminator=string.sub(user,-4),guild=message.guild.id,channel=message.channel.id,duration=os.time()+time}
 			  fs.writeFileSync("mute.config",json.stringify(mutelist))
 			  mute(user,message.guild)
 			  message.channel:sendMessage('Muted '..message.guild:findMember(getuser).name..' for '..(d > 0 and d..'d ' or '')..(h > 0 and h..'h ' or '')..(m > 0 and m..'m ' or '')..(s > 0 and s..'s' or '')..'.')
