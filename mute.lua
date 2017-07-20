@@ -89,8 +89,12 @@ client:on('messageCreate', function(message)
 		  elseif string.match(arg, '^%b""') then
 			args[i] = string.sub(string.match(arg, '^%b""'),2,-2)
 			_,j = string.find(arg,'^%b""')
+		  else
+		    i = i - 1
+		    args[i] = args[i]..string.match(arg, "[^%s]+")
+			_,j = string.find(arg,"[^%s]+")
 		  end
-		elseif string.match(arg, "[^%s\"']+") then
+		else
 		  args[i] = string.match(arg, "[^%s\"']+")
 		  _,j = string.find(arg,"[^%s\"']+")
 		end
