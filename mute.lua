@@ -90,8 +90,8 @@ client:on('messageCreate', function(message)
 			args[i] = string.sub(string.match(arg, '^%b""'),2,-2)
 			_,j = string.find(arg,'^%b""')
 		  else
-		    i = i - 1
-		    args[i] = args[i]..string.match(arg, "[^%s]+")
+		    i = math.max(i -1,1)
+		    args[i] = (args[i] or '')..string.match(arg, "[^%s]+")
 			_,j = string.find(arg,"[^%s]+")
 		  end
 		else
