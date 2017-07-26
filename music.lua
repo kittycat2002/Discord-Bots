@@ -102,7 +102,13 @@ client:on('messageCreate', function(message)
 	  else
 		local queuelist = ""
 		for i=1,#queue do
-		  queuelist = queuelist..i..": "..string.gsub(string.sub(string.sub(queue[i].name,string.find(queue[i].name,'^.*%.')),1,-2),"[%-_]"," ").."\n"
+		  local added = i..": "..string.gsub(string.sub(string.sub(queue[i].name,string.find(queue[i].name,'^.*%.')),1,-2),"[%-_]"," ").."\n"
+		  if #(queuelist..added) <= 2000 then
+		    queuelist = queuelist..added
+		  else
+		    message.channel:sendMessage(queuelist)
+			queuelist = added
+		  end
 		end
 		message.channel:sendMessage(queuelist)
 	  end
