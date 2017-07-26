@@ -4,7 +4,7 @@ local http = require('http')
 local json = require('json')
 local timer = require('timer')
 local client = discordia.Client()
-local config,_,err = json.parse(fs.readFileSync("music.config"))
+local config,_,err = json.parse(fs.readFileSync("music.config") or '[]') or {}
 musiclist = {}
 queue = {}
 

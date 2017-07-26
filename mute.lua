@@ -46,7 +46,7 @@ function unmute(user,guild)
   end
 end
 function unmutetimed()
-  local mutelist = json.parse(fs.readFileSync("mute.config")) or {}
+  local mutelist = json.parse(fs.readFileSync("mute.config") or '[]') or {}
   local mod = 0
   for i=1,#mutelist do
     i = i-mod
@@ -112,7 +112,7 @@ client:on('messageCreate', function(message)
 	  end
 	end
 	if args[1] == "!unmute" and canmute then
-	  local mutelist = json.parse(fs.readFileSync("mute.config")) or {}
+	  local mutelist = json.parse(fs.readFileSync("mute.config") or '[]') or {}
       local str = tabtostr(args,2)
 	  local str = string.gsub(str,"^%s*","")
 	  local sub1,sub2 = string.find(str,".*#%d%d%d%d")
@@ -132,7 +132,7 @@ client:on('messageCreate', function(message)
 		end
 	  end
 	elseif args[1] == "!mute" and canmute then
-	  local mutelist = json.parse(fs.readFileSync("mute.config")) or {}
+	  local mutelist = json.parse(fs.readFileSync("mute.config") or '[]') or {}
 	  local str = tabtostr(args,2)
 	  local str = string.gsub(str,"^%s*","")
       local sub1,sub2 = string.find(str,".*#%d%d%d%d")
