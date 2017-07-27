@@ -77,7 +77,7 @@ client:on('messageCreate', function(message)
 		end
 	  end
 	end
-	if args[1] == '!vote' and tonumber(args[2]) > 0 and #args >= 5 and #args <= 23 then
+	if args[1] == '!vote' and tonumber(args[2]) and tonumber(args[2]) > 0 and #args >= 5 and #args <= 23 then
 	  canstart = nil
 	  for role in message.guild:getMember(message.author.id).roles do
 	    if role.permissions:has('manageMessages') then
