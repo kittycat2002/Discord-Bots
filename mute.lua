@@ -102,7 +102,7 @@ client:on('messageCreate', function(message)
       local sub1,sub2 = string.find(str,".*#%d%d%d%d")
       if sub1 then
         local user = string.sub(str,sub1,sub2)
-        local time = botlib.time(string.sub(str,sub2+1))
+        local time,display = botlib.time(string.sub(str,sub2+1))
 		if time > 0 then
 		  for i = 1,#mutelist+1 do
 			if i == #mutelist+1 then
@@ -112,11 +112,11 @@ client:on('messageCreate', function(message)
 			  mutelist[i] = {user=string.sub(user,1,-6),discriminator=string.sub(user,-4),guild=message.guild.id,channel=message.channel.id,duration=os.time()+time}
 			  fs.writeFileSync("mute.config",json.stringify(mutelist))
 			  mute(user,message.guild)
-			  message.channel:sendMessage('Muted '..message.guild:findMember(getuser).name..' for '..(d > 0 and d..'d ' or '')..(h > 0 and h..'h ' or '')..(m > 0 and m..'m ' or '')..(s > 0 and s..'s' or '')..'.')
+			  message.channel:sendMessage('Muted '..message.guild:findMember(getuser).name..' for '..display)
 			  break
 			elseif mutelist[i].user == string.sub(user,1,-6) and mutelist[i].discriminator == string.sub(user,-4) and mutelist[i].guild == message.guild.id then
 			  mutelist[i].duration = os.time()+time
-			  message.channel:sendMessage('Muted '..message.guild:findMember(getuser).name..' for '..(d > 0 and d..'d ' or '')..(h > 0 and h..'h ' or '')..(m > 0 and m..'m ' or '')..(s > 0 and s..'s' or '')..'.')
+			  message.channel:sendMessage('Muted '..message.guild:findMember(getuser).name..' for '..display)
 			  break
 			end
 		  end
