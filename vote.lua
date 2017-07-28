@@ -1,3 +1,4 @@
+local botlib = require('botlib')
 local discordia = require('discordia')
 local fs = require('fs')
 local json = require('json')
@@ -47,37 +48,8 @@ end)
 client:on('messageCreate', function(message)
   if not message.author.bot then
     voteend()
-    local arg = message.content
-	local args = {}
-	local i = 0
-	if arg then
-	  while #arg > 0 do
-		i = i + 1
-		if string.match(arg,'^%s+') then
-	  	  _,j = string.find(arg,'^%s+')
-		elseif string.match(arg,'^[\'"]') then
-		  if string.match(arg, "^%b''") then
-			args[i] = string.sub(string.match(arg, "^%b''"),2,-2)
-			_,j = string.find(arg,"^%b''")
-		  elseif string.match(arg, '^%b""') then
-			args[i] = string.sub(string.match(arg, '^%b""'),2,-2)
-			_,j = string.find(arg,'^%b""')
-		  else
-		    i = math.max(i -1,1)
-		    args[i] = (args[i] or '')..string.match(arg, "[^%s]+")
-			_,j = string.find(arg,"[^%s]+")
-		  end
-		else
-		  args[i] = string.match(arg, "[^%s\"']+")
-		  _,j = string.find(arg,"[^%s\"']+")
-		end
-		arg = string.sub(arg,j+1)
-		if not args[i] then
-		  i = i - 1
-		end
-	  end
-	end
-	if args[1] == '!vote' and tonumber(args[2]) and tonumber(args[2]) > 0 and #args >= 5 and #args <= 23 then
+	local args = botlib.command(message.content)
+	if args[1] == '!vote' and tonumber(args[2]) and tonumber(args[2]) >= 2 and tonumber(args[2]) <= 20 and #args >= tonumber(args[2]) + 4 then
 	  canstart = nil
 	  for role in message.guild:getMember(message.author.id).roles do
 	    if role.permissions:has('manageMessages') then
@@ -86,19 +58,22 @@ client:on('messageCreate', function(message)
 	    end
 	  end
 	  if canstart then
-	    local str = ''
-		local options = {}
-	    for i = 4,#args do
-	      str = str..(emojilist[i-3])..': '..args[i]..' '
-		  options[i-3] = args[i]
-	    end
-	    message = message.channel:sendMessage('"'..args[3]..'" options are:\n'..str)
-	    for i = 1,#args-3 do
-	      message:addReaction(emojilist[i])
-	    end
-		local votelist = json.parse(fs.readFileSync("vote.config") or '[]') or {}
-		table.insert(votelist,{guild=message.guild.id,channel=message.channel.id,message=message.id,duration=os.time()+args[2],options=options})
-		fs.writeFileSync("vote.config",json.stringify(votelist))
+	    local time,display = botlib.time(botlib.tabtostr(args,3,#args-tonumber(args[2])-1))
+		if time > 0 then
+	      local str = ''
+		  local options = {}
+	      for i = #args-tonumber(args[2])+1,#args do
+	        str = str..(emojilist[#options+1])..': '..args[i]..' '
+		    options[#options+1] = args[i]
+	      end
+	      local message = message.channel:sendMessage('"'..args[#args-tonumber(args[2])]..'" with a time limit of "'..display..'" options are:\n'..str)
+	      for i = 1,#options do
+	        message:addReaction(emojilist[i])
+	      end
+		  local votelist = json.parse(fs.readFileSync("vote.config") or '[]') or {}
+		  table.insert(votelist,{guild=message.guild.id,channel=message.channel.id,message=message.id,duration=os.time()+time,options=options})
+		  fs.writeFileSync("vote.config",json.stringify(votelist))
+		end
 	  end
 	end
   end
