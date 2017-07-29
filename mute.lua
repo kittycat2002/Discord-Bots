@@ -115,8 +115,6 @@ client:on('messageCreate', function(message)
 			  message.channel:sendMessage('Muted '..message.guild:findMember(getuser).name..' for '..display)
 			  break
 			elseif mutelist[i].user == string.sub(user,1,-6) and mutelist[i].discriminator == string.sub(user,-4) and mutelist[i].guild == message.guild.id then
-			  mutelist[i].duration = os.time()+time
-			  message.channel:sendMessage('Muted '..message.guild:findMember(getuser).name..' for '..display)
 			  break
 			end
 		  end

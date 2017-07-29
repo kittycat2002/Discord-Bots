@@ -29,7 +29,7 @@ function voteend()
 		end
 	  end
 	  winner = votelist[i].options[winner[math.random(#winner)].id]
-	  client:getGuild(votelist[i].guild):getChannel(votelist[i].channel):sendMessage('"'..winner..'" won the vote.')
+	  client:getGuild(votelist[i].guild):getChannel(votelist[i].channel):sendMessage('"'..winner..'" won the vote of "'..votelist[i].vote..'"')
       table.remove(votelist,i)
 	  mod = mod+1
 	end
@@ -66,13 +66,17 @@ client:on('messageCreate', function(message)
 	        str = str..(emojilist[#options+1])..': '..args[i]..' '
 		    options[#options+1] = args[i]
 	      end
-	      local message = message.channel:sendMessage('"'..args[#args-tonumber(args[2])]..'" with a time limit of "'..display..'" options are:\n'..str)
-	      for i = 1,#options do
-	        message:addReaction(emojilist[i])
-	      end
-		  local votelist = json.parse(fs.readFileSync("vote.config") or '[]') or {}
-		  table.insert(votelist,{guild=message.guild.id,channel=message.channel.id,message=message.id,duration=os.time()+time,options=options})
-		  fs.writeFileSync("vote.config",json.stringify(votelist))
+	      local newmessage = message.channel:sendMessage('"'..args[#args-tonumber(args[2])]..'" with a time limit of "'..display..'" options are:\n'..str) or false
+		  if newmessage then
+	        for i = 1,#options do
+	          newmessage:addReaction(emojilist[i])
+	        end
+		    local votelist = json.parse(fs.readFileSync("vote.config") or '[]') or {}
+		    table.insert(votelist,{guild=newmessage.guild.id,channel=newmessage.channel.id,message=newmessage.id,duration=os.time()+time,options=options,vote=args[#args-tonumber(args[2])]})
+		    fs.writeFileSync("vote.config",json.stringify(votelist))
+		  else
+		    message.channel:sendMessage('Warning, failed to create message.')
+		  end
 		end
 	  end
 	end
