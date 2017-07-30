@@ -2,5 +2,6 @@
 *.config
 *.exe
 *.json
+*.list
 *.token
 deps

@@ -3,6 +3,7 @@ local discordia = require('discordia')
 local fs = require('fs')
 local json = require('json')
 local client = discordia.Client()
+local config = json.parse(fs.readFileSync("mute.config") or '[]') or {}
 
 function mute(user,guild)
   if type(guild) == 'string' then
@@ -12,7 +13,7 @@ function mute(user,guild)
     return member.username == string.sub(user,1,-6) and member.discriminator == string.sub(user,-4)
   end
   local function getrole(role)
-    return string.lower(role.name) == 'muted'
+    return string.lower(role.name) == string.lower(config.role)
   end
   local member = guild:findMember(getuser)
   local muted = guild:findRole(getrole)
@@ -29,7 +30,7 @@ function unmute(user,guild)
     return member.username == string.sub(user,1,-6) and member.discriminator == string.sub(user,-4)
   end
   local function getrole(role)
-    return string.lower(role.name) == 'muted'
+    return string.lower(role.name) == string.lower(config.role)
   end
   local member = guild:findMember(getuser)
   local muted = guild:findRole(getrole)
@@ -39,7 +40,7 @@ function unmute(user,guild)
   end
 end
 function unmutetimed()
-  local mutelist = json.parse(fs.readFileSync("mute.config") or '[]') or {}
+  local mutelist = json.parse(fs.readFileSync("muted.list") or '[]') or {}
   local mod = 0
   for i=1,#mutelist do
     i = i-mod
@@ -53,7 +54,7 @@ function unmutetimed()
 	  mod = mod+1
 	end
   end
-  fs.writeFileSync("mute.config",json.stringify(mutelist))
+  fs.writeFileSync("muted.list",json.stringify(mutelist))
 end
 client:on('ready', function()
   print("bot connected to discord with id "..client.user.id)
@@ -76,7 +77,7 @@ client:on('messageCreate', function(message)
 	  end
 	end
 	if args[1] == "!unmute" and canmute then
-	  local mutelist = json.parse(fs.readFileSync("mute.config") or '[]') or {}
+	  local mutelist = json.parse(fs.readFileSync("muted.list") or '[]') or {}
       local str = botlib.tabtostr(args,2)
 	  local str = string.gsub(str,"^%s*","")
 	  local sub1,sub2 = string.find(str,".*#%d%d%d%d")
@@ -85,7 +86,7 @@ client:on('messageCreate', function(message)
 		for i = 1,#mutelist do
 		  if mutelist[i].user == string.sub(user,1,-6) and mutelist[i].discriminator == string.sub(user,-4) and mutelist[i].guild == message.guild.id then
 			table.remove(mutelist,i)
-			fs.writeFileSync("mute.config",json.stringify(mutelist))
+			fs.writeFileSync("muted.list",json.stringify(mutelist))
 			unmute(user,message.guild)
 			local function getuser(member)
 			  return member.username == string.sub(user,1,-6) and member.discriminator == string.sub(user,-4)
@@ -96,7 +97,7 @@ client:on('messageCreate', function(message)
 		end
 	  end
 	elseif args[1] == "!mute" and canmute then
-	  local mutelist = json.parse(fs.readFileSync("mute.config") or '[]') or {}
+	  local mutelist = json.parse(fs.readFileSync("muted.list") or '[]') or {}
 	  local str = botlib.tabtostr(args,2)
 	  local str = string.gsub(str,"^%s*","")
       local sub1,sub2 = string.find(str,".*#%d%d%d%d")
@@ -110,7 +111,7 @@ client:on('messageCreate', function(message)
 				return member.username == string.sub(user,1,-6) and member.discriminator == string.sub(user,-4)
 			  end
 			  mutelist[i] = {user=string.sub(user,1,-6),discriminator=string.sub(user,-4),guild=message.guild.id,channel=message.channel.id,duration=os.time()+time}
-			  fs.writeFileSync("mute.config",json.stringify(mutelist))
+			  fs.writeFileSync("muted.list",json.stringify(mutelist))
 			  mute(user,message.guild)
 			  message.channel:sendMessage('Muted '..message.guild:findMember(getuser).name..' for '..display)
 			  break
