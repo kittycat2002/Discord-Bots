@@ -44,7 +44,7 @@ function unmutetimed()
   local mod = 0
   for i=1,#mutelist do
     i = i-mod
-    if mutelist[i].duration < os.time() then
+    if mutelist[i].duration and mutelist[i].duration < os.time() then
 	  unmute(mutelist[i].user..'#'..mutelist[i].discriminator,mutelist[i].guild)
 	  local function getuser(member)
         return member.username == mutelist[i].user and member.discriminator == mutelist[i].discriminator
@@ -104,20 +104,18 @@ client:on('messageCreate', function(message)
       if sub1 then
         local user = string.sub(str,sub1,sub2)
         local time,display = botlib.time(string.sub(str,sub2+1))
-		if time > 0 then
-		  for i = 1,#mutelist+1 do
-			if i == #mutelist+1 then
-			  local function getuser(member)
-				return member.username == string.sub(user,1,-6) and member.discriminator == string.sub(user,-4)
-			  end
-			  mutelist[i] = {user=string.sub(user,1,-6),discriminator=string.sub(user,-4),guild=message.guild.id,channel=message.channel.id,duration=os.time()+time}
-			  fs.writeFileSync("muted.list",json.stringify(mutelist))
-			  mute(user,message.guild)
-			  message.channel:sendMessage('Muted '..message.guild:findMember(getuser).name..' for '..display)
-			  break
-			elseif mutelist[i].user == string.sub(user,1,-6) and mutelist[i].discriminator == string.sub(user,-4) and mutelist[i].guild == message.guild.id then
-			  break
+		for i = 1,#mutelist+1 do
+		  if i == #mutelist+1 then
+			local function getuser(member)
+			  return member.username == string.sub(user,1,-6) and member.discriminator == string.sub(user,-4)
 			end
+			mutelist[i] = {user=string.sub(user,1,-6),discriminator=string.sub(user,-4),guild=message.guild.id,channel=message.channel.id,duration = time > 0 and (os.time()+time) or nil}
+			fs.writeFileSync("muted.list",json.stringify(mutelist))
+			mute(user,message.guild)
+			message.channel:sendMessage('Muted '..message.guild:findMember(getuser).name..(time > 0 and (' for '..display) or ' indefinitely.'))
+			break
+		  elseif mutelist[i].user == string.sub(user,1,-6) and mutelist[i].discriminator == string.sub(user,-4) and mutelist[i].guild == message.guild.id then
+			break
 		  end
 		end
       end
