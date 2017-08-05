@@ -46,7 +46,7 @@ end)
 end)
  
 client:on('messageCreate', function(message)
-  if not message.author.bot then
+  if not message.author.bot and message.guild then
     voteend()
 	local args = botlib.command(message.content)
 	if args[1] == '!vote' and tonumber(args[2]) and tonumber(args[2]) >= 2 and tonumber(args[2]) <= 20 and #args >= tonumber(args[2]) + 4 then
