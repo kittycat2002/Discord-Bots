@@ -66,7 +66,7 @@ unmutetimed()
 end)
 
 client:on('messageCreate', function(message)
-  if not message.author.bot then
+  if not message.author.bot and message.guild then
     unmutetimed()
     local args = botlib.command(message.content)
 	canmute = nil

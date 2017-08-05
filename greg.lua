@@ -63,7 +63,7 @@ client:on('heartbeat', function()
 end)
 
 client:on('messageCreate', function(message)
-	if not message.author.bot then
+	if not message.author.bot and message.guild then
 		mentions = nil
 		if message.mentionedUsers() then
 		for i=1,#config.triggers.mentions do
