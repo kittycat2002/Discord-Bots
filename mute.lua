@@ -49,7 +49,9 @@ function unmutetimed()
 	  local function getuser(member)
         return member.username == mutelist[i].user and member.discriminator == mutelist[i].discriminator
       end
-	  client:getGuild(mutelist[i].guild):getChannel(mutelist[i].channel):sendMessage('Unmuted '..client:getGuild(mutelist[i].guild):findMember(getuser).name..'.')
+	  local name = client:getGuild(mutelist[i].guild):findMember(getuser)
+	  name = name and name.name or mutelist[i].user
+	  client:getGuild(mutelist[i].guild):getChannel(mutelist[i].channel):sendMessage('Unmuted '..name..'.')
       table.remove(mutelist,i)
 	  mod = mod+1
 	end
@@ -91,7 +93,9 @@ client:on('messageCreate', function(message)
 			local function getuser(member)
 			  return member.username == string.sub(user,1,-6) and member.discriminator == string.sub(user,-4)
 			end
-			message.channel:sendMessage('Unmuted '..message.guild:findMember(getuser).name..'.')
+			local name = message.guild:findMember(getuser)
+	        name = name and name.name or string.sub(user,1,-6)
+			message.channel:sendMessage('Unmuted '..name..'.')
 			break
 		  end
 		end
