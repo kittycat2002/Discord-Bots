@@ -13,24 +13,33 @@ function voteend()
     i = i-mod
     if votelist[i].duration < os.time() then
 	  votes = {}
+	  local ended = false
 	  for j=1,#votelist[i].options do
 	    local k = 0
-	    for user in client:getGuild(votelist[i].guild):getChannel(votelist[i].channel):getMessage(votelist[i].message):getReactionUsers(emojilist[j]) do
+		local message = client:getGuild(votelist[i].guild):getChannel(votelist[i].channel):getMessage(votelist[i].message)
+		if not message then
+		  ended = true
+		  table.remove(votelist,i)
+		  break
+		end
+	    for user in message:getReactionUsers(emojilist[j]) do
 		  k = k + 1
 		end
 		votes[j] = k
 	  end
-	  winner = {{count = 0}}
-	  for i = 1,#votes do
-	    if votes[i] > winner[1].count then
-		  winner = {{id = i,count = votes[i]}}
-		elseif votes[i] == winner[1].count then
-		  table.insert(winner,{id = i,count = votes[i]})
-		end
+	  if not ended then
+	    winner = {{count = 0}}
+	    for i = 1,#votes do
+	      if votes[i] > winner[1].count then
+		    winner = {{id = i,count = votes[i]}}
+		  elseif votes[i] == winner[1].count then
+		    table.insert(winner,{id = i,count = votes[i]})
+		  end
+	    end
+	    winner = votelist[i].options[winner[math.random(#winner)].id]
+	    client:getGuild(votelist[i].guild):getChannel(votelist[i].channel):sendMessage('"'..winner..'" won the vote of "'..votelist[i].vote..'"')
+        table.remove(votelist,i)
 	  end
-	  winner = votelist[i].options[winner[math.random(#winner)].id]
-	  client:getGuild(votelist[i].guild):getChannel(votelist[i].channel):sendMessage('"'..winner..'" won the vote of "'..votelist[i].vote..'"')
-      table.remove(votelist,i)
 	  mod = mod+1
 	end
   end
