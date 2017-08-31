@@ -120,6 +120,7 @@ client:on('messageCreate', function(message)
 			break
 		  elseif mutelist[i].user == string.sub(user,1,-6) and mutelist[i].discriminator == string.sub(user,-4) and mutelist[i].guild == message.guild.id then
 		    mutelist[i].duration = time > 0 and (os.time()+time) or nil
+			fs.writeFileSync("muted.list",json.stringify(mutelist))
 			message.channel:sendMessage('Muted '..message.guild:findMember(getuser).name..(time > 0 and (' for '..display) or ' indefinitely.'))
 			break
 		  end
