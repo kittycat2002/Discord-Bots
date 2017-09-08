@@ -29,6 +29,11 @@ client:on('ready', function()
   print("bot connected to discord with id "..client.user.id)
   channel = client:getGuild(config.guild):getVoiceChannel(config.channel)
   queuechannel = client:getGuild(config.guild):getTextChannel(config.queuechannel)
+  oldconnection = client.voice:connections()
+  if oldconnection then
+    oldconnection.channel:leave()
+  end
+  oldconnection = nil
   connection = channel:join()
   client:setGameName()
   while true do
